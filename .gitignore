@@ -1,0 +1,17 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Obsidian per-machine / volatile state (let each user generate their own)
+.obsidian/
+.trash/
+
+# Claude Code local overrides (keep the shared .claude/settings.json; ignore personal ones)
+.claude/settings.local.json
+.claude/projects/
+.claude/todos/
+.claude/shell-snapshots/
+
+# Scratch / archives
+*.zip
