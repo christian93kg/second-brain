@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Second Brain — a Life Optimization Vault starter kit</title>
+<meta name="description" content="A curated, LLM-maintained knowledge base where your research flows into decisions about your life. Built for Obsidian + Claude Code." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0c0d0b;
+    --bg-2: #0e0f0d;
+    --surface: #131512;
+    --surface-2: #16180f;
+    --line: #23261f;
+    --line-soft: #1b1e18;
+    --ink: #e7e9e2;
+    --ink-dim: #a3a89b;
+    --ink-faint: #6b7062;
+    --green: #7ee787;
+    --green-deep: #4caf63;
+    --amber: #e3b341;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --maxw: 1120px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Quiet grid + scanline texture overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(to right, rgba(126, 231, 135, 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(126, 231, 135, 0.025) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 80%);
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.012) 0 1px, transparent 1px 3px);
+    opacity: 0.5;
+  }
+
+  a { color: inherit; }
+
+  ::selection { background: rgba(126, 231, 135, 0.22); color: #fff; }
+
+  .wrap {
+    width: 100%;
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ---------- Section scaffolding ---------- */
+  section { position: relative; z-index: 2; }
+
+  .label {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--green);
+    text-transform: none;
+    margin: 0 0 28px;
+    display: inline-block;
+    opacity: 0.9;
+  }
+  .label .dim { color: var(--ink-faint); }
+
+  h2 {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(26px, 3.4vw, 40px);
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    margin: 0 0 18px;
+    color: var(--ink);
+  }
+
+  .lede {
+    color: var(--ink-dim);
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  /* ---------- Top bar ---------- */
+  header.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(12, 13, 11, 0.72);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .topbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+  .brand {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .brand .sq {
+    width: 11px; height: 11px;
+    background: var(--green);
+    box-shadow: 0 0 10px rgba(126,231,135,0.6);
+    display: inline-block;
+  }
+  .topnav {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .topnav a {
+    color: var(--ink-dim);
+    text-decoration: none;
+    transition: color 0.18s ease;
+  }
+  .topnav a:hover { color: var(--green); }
+  .topnav .ghost-link {
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 7px 14px;
+    border-radius: 6px;
+    transition: border-color 0.18s ease, color 0.18s ease;
+  }
+  .topnav .ghost-link:hover { border-color: var(--green-deep); color: var(--green); }
+  @media (max-width: 720px) {
+    .topnav .nav-text { display: none; }
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: transform 0.16s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .btn-primary {
+    background: var(--green);
+    color: #07110a;
+    font-weight: 700;
+    box-shadow: 0 0 0 rgba(126,231,135,0);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -8px rgba(126,231,135,0.5);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  .btn-ghost:hover {
+    border-color: var(--green-deep);
+    color: var(--green);
+    transform: translateY(-2px);
+  }
+  .btn .arr { transition: transform 0.18s ease; }
+  .btn:hover .arr { transform: translateX(3px); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: clamp(64px, 11vw, 120px) 0 clamp(56px, 8vw, 96px);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .hero-kicker {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin: 0 0 26px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-kicker .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px rgba(126,231,135,0.7);
+  }
+  h1 {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(34px, 6.6vw, 76px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    margin: 0 0 26px;
+    max-width: 17ch;
+  }
+  h1 .accent { color: var(--green); }
+  .cursor {
+    display: inline-block;
+    width: 0.58ch;
+    height: 1em;
+    background: var(--green);
+    margin-left: 2px;
+    transform: translateY(0.12em);
+    animation: blink 1.08s steps(1) infinite;
+  }
+  @keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+
+  .hero-tagline {
+    font-size: clamp(19px, 2.4vw, 23px);
+    line-height: 1.5;
+    color: var(--ink);
+    max-width: 56ch;
+    margin: 0 0 18px;
+  }
+  .hero-subline {
+    color: var(--ink-dim);
+    max-width: 60ch;
+    margin: 0 0 40px;
+  }
+  .hero-subline .em { color: var(--ink); }
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+  }
+  .hero-meta {
+    margin-top: 34px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+  }
+  .hero-meta span { display: inline-flex; align-items: center; gap: 8px; }
+  .hero-meta .tick { color: var(--green); }
+
+  /* ---------- Section spacing ---------- */
+  .section-pad { padding: clamp(72px, 10vw, 116px) 0; }
+  .section-pad.bordered { border-bottom: 1px solid var(--line-soft); }
+
+  /* ---------- Hook cards ---------- */
+  .hook-head { max-width: 70ch; margin-bottom: 44px; }
+  .grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .qcard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 26px 26px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+  }
+  .qcard::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--green);
+    opacity: 0;
+    transition: opacity 0.22s ease;
+  }
+  .qcard:hover {
+    border-color: var(--green-deep);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px -20px rgba(126,231,135,0.4), inset 0 0 0 1px rgba(126,231,135,0.08);
+  }
+  .qcard:hover::before { opacity: 0.8; }
+  .qcard .qidx {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--green);
+    opacity: 0.7;
+    margin-bottom: 16px;
+  }
+  .qcard .q {
+    font-family: var(--mono);
+    font-size: clamp(16px, 1.9vw, 19px);
+    line-height: 1.45;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .hook-foot {
+    margin-top: 30px;
+    color: var(--ink-dim);
+    max-width: 74ch;
+  }
+  .hook-foot .em { color: var(--ink); }
+
+  /* ---------- Flowdown ---------- */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin-top: 12px;
+    align-items: stretch;
+  }
+  .fnode {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 28px 22px 26px;
+    text-align: center;
+    position: relative;
+    transition: border-color 0.22s ease, box-shadow 0.22s ease;
+  }
+  .fnode:hover { border-color: var(--green-deep); box-shadow: 0 0 0 1px rgba(126,231,135,0.12); }
+  .fnode .fn-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+  }
+  .fnode .fn-name {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: clamp(17px, 2vw, 22px);
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+  .fnode:nth-child(odd) .fn-name { color: var(--green); }
+  .fnode .fn-role {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-dim);
+  }
+  .farrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    color: var(--green-deep);
+    font-size: 22px;
+    padding: 0 6px;
+    user-select: none;
+  }
+  .flow-caption {
+    margin-top: 34px;
+    color: var(--ink-dim);
+    max-width: 78ch;
+  }
+  .flow-caption .em { color: var(--ink); }
+
+  /* ---------- What you get ---------- */
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .fcard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 30px 30px 32px;
+    transition: border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+  }
+  .fcard:hover {
+    border-color: var(--green-deep);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px -20px rgba(126,231,135,0.4);
+  }
+  .fcard .ftag {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--green);
+    opacity: 0.85;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .fcard .ftag .bracket { color: var(--ink-faint); }
+  .fcard h3 {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+  .fcard p {
+    margin: 0;
+    color: var(--ink-dim);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .features-foot {
+    margin-top: 30px;
+    font-family: var(--mono);
+    color: var(--ink);
+    font-size: clamp(16px, 2vw, 19px);
+  }
+  .features-foot .dim { color: var(--ink-faint); }
+
+  /* ---------- Install terminal ---------- */
+  .install-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .terminal {
+    background: #0a0b09;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 30px 80px -40px rgba(0,0,0,0.8);
+  }
+  .term-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 16px;
+    background: #111310;
+    border-bottom: 1px solid var(--line);
+  }
+  .term-bar .tl { width: 12px; height: 12px; border-radius: 50%; }
+  .tl.r { background: #e35d4f; }
+  .tl.y { background: var(--amber); }
+  .tl.g { background: var(--green-deep); }
+  .term-bar .term-title {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin-left: 10px;
+  }
+  .term-body {
+    padding: 24px clamp(18px, 3vw, 30px) 28px;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .step { padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+  .step:last-child { border-bottom: 0; }
+  .step:first-child { padding-top: 0; }
+  .step-head {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    color: var(--ink);
+  }
+  .step-head .n {
+    color: var(--green);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-head .desc { color: var(--ink); }
+  .step-head .desc .kbd {
+    color: var(--amber);
+  }
+  .cmd {
+    margin: 10px 0 0 27px;
+    background: #07080660;
+    border: 1px solid var(--line-soft);
+    border-radius: 7px;
+    padding: 11px 14px;
+    color: var(--ink-dim);
+    white-space: pre-wrap;
+    word-break: break-word;
+    position: relative;
+  }
+  .cmd .prompt { color: var(--green); user-select: none; margin-right: 9px; }
+  .cmd .slash { color: var(--green); }
+  .cmd .said { color: var(--amber); }
+  .cmd-row { display: block; }
+  .cmd-row + .cmd-row { margin-top: 6px; }
+
+  .callout {
+    background: rgba(227, 179, 65, 0.06);
+    border: 1px solid rgba(227, 179, 65, 0.35);
+    border-left: 3px solid var(--amber);
+    border-radius: 9px;
+    padding: 22px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .callout .ico {
+    font-family: var(--mono);
+    color: var(--amber);
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+    line-height: 1.5;
+  }
+  .callout .ctxt {
+    color: var(--ink);
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+  .callout .ctxt .lead {
+    font-family: var(--mono);
+    color: var(--amber);
+    font-size: 12.5px;
+    display: block;
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- Footer ---------- */
+  .footer {
+    border-top: 1px solid var(--line-soft);
+    padding: clamp(64px, 9vw, 100px) 0 56px;
+    position: relative;
+    z-index: 2;
+  }
+  .footer-cta {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+  .footer-cta h2 {
+    margin-bottom: 26px;
+  }
+  .footer-cta .sub {
+    color: var(--ink-dim);
+    max-width: 50ch;
+    margin: 0 auto 34px;
+  }
+  .footer-cta .ctas {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .credits {
+    border-top: 1px solid var(--line-soft);
+    padding-top: 34px;
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+  .credits a { color: var(--ink-dim); text-decoration: none; transition: color 0.18s ease; }
+  .credits a:hover { color: var(--green); }
+  .credits .creds-text { max-width: 58ch; }
+  .credits .creds-text .em { color: var(--ink-dim); }
+
+  /* ---------- Reveal-on-scroll ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1);
+  }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 860px) {
+    .flow { grid-template-columns: 1fr; gap: 0; }
+    .farrow { transform: rotate(90deg); padding: 10px 0; }
+  }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .grid-2x2 { grid-template-columns: 1fr; }
+    .features { grid-template-columns: 1fr; }
+    .hero-ctas { width: 100%; }
+    .hero-ctas .btn { flex: 1 1 auto; justify-content: center; }
+    .credits { flex-direction: column; }
+    .cmd { margin-left: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .cursor { animation: none; opacity: 1; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .btn:hover, .qcard:hover, .fcard:hover { transform: none; }
+    * { animation-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a class="brand" href="#top"><span class="sq"></span>second-brain</a>
+    <nav class="topnav">
+      <a class="nav-text" href="#what">// what you get</a>
+      <a class="nav-text" href="#install">// install</a>
+      <a class="ghost-link" href="https://github.com/christian93kg/second-brain" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="wrap">
+      <p class="hero-kicker"><span class="dot"></span>open-source template · Obsidian + Claude Code · MIT</p>
+      <h1>Your <span class="accent">second brain</span>, kept honest by a machine<span class="cursor" aria-hidden="true"></span></h1>
+      <p class="hero-tagline" id="typeline">A curated, LLM-maintained knowledge base where your research flows into decisions about your life.</p>
+      <p class="hero-subline">Built for Obsidian + Claude Code. The atomic unit isn't <span class="em">"a note"</span> — it's a claim flowing into a decision.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="https://github.com/christian93kg/second-brain/generate" target="_blank" rel="noopener">Use this template <span class="arr">→</span></a>
+        <a class="btn btn-ghost" href="https://github.com/christian93kg/second-brain" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+      <div class="hero-meta">
+        <span><span class="tick">✓</span> ~10-minute setup</span>
+        <span><span class="tick">✓</span> Frontmatter schema included</span>
+        <span><span class="tick">✓</span> Worked example domain</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOOK ============ -->
+  <section class="section-pad bordered">
+    <div class="wrap">
+      <div class="hook-head reveal">
+        <p class="label">// 01 <span class="dim">— the payoff</span></p>
+        <h2>A well-run vault can answer four<br />questions at any moment</h2>
+        <p class="lede">Most note systems accumulate. This one stays answerable. Ask it anything below and the structure already knows where to look.</p>
+      </div>
+      <div class="grid-2x2 reveal">
+        <div class="qcard">
+          <div class="qidx">q.01</div>
+          <div class="q">What have I decided, and why?</div>
+        </div>
+        <div class="qcard">
+          <div class="qidx">q.02</div>
+          <div class="q">What's still open, and what's blocking it?</div>
+        </div>
+        <div class="qcard">
+          <div class="qidx">q.03</div>
+          <div class="q">Which facts are fresh, which are stale, which contradict each other?</div>
+        </div>
+        <div class="qcard">
+          <div class="qidx">q.04</div>
+          <div class="q">What should I research next?</div>
+        </div>
+      </div>
+      <p class="hook-foot reveal"><span class="em">Claude does the bookkeeping</span> — cross-referencing, staleness tracking, contradiction-hunting — that makes humans abandon wikis. You curate sources and ask good questions.</p>
+    </div>
+  </section>
+
+  <!-- ============ FLOWDOWN ============ -->
+  <section class="section-pad bordered">
+    <div class="wrap">
+      <div class="reveal" style="max-width:70ch;margin-bottom:44px;">
+        <p class="label">// 02 <span class="dim">— the architecture</span></p>
+        <h2>Information flows in one direction</h2>
+        <p class="lede">Four layers. Each one cites the layer above it. Nothing points sideways or back up.</p>
+      </div>
+      <div class="flow reveal">
+        <div class="fnode">
+          <div class="fn-num">layer 0</div>
+          <div class="fn-name">Profile</div>
+          <div class="fn-role">who</div>
+        </div>
+        <div class="farrow" aria-hidden="true">→</div>
+        <div class="fnode">
+          <div class="fn-num">layer 1</div>
+          <div class="fn-name">Claims</div>
+          <div class="fn-role">facts</div>
+        </div>
+        <div class="farrow" aria-hidden="true">→</div>
+        <div class="fnode">
+          <div class="fn-num">layer 2</div>
+          <div class="fn-name">Analyses</div>
+          <div class="fn-role">compare</div>
+        </div>
+        <div class="farrow" aria-hidden="true">→</div>
+        <div class="fnode">
+          <div class="fn-num">layer 3</div>
+          <div class="fn-name">Decisions</div>
+          <div class="fn-role">commit</div>
+        </div>
+      </div>
+      <p class="flow-caption reveal"><span class="em">Information flows strictly downward;</span> each layer cites the one above it. That's what makes contradictions detectable and decisions reviewable.</p>
+    </div>
+  </section>
+
+  <!-- ============ WHAT YOU GET ============ -->
+  <section class="section-pad bordered" id="what">
+    <div class="wrap">
+      <div class="reveal" style="max-width:70ch;margin-bottom:44px;">
+        <p class="label">// 03 <span class="dim">— what you get</span></p>
+        <h2>A working system, not a blank vault</h2>
+        <p class="lede">Clone it and the scaffolding is already standing. You supply the thinking.</p>
+      </div>
+      <div class="features reveal">
+        <div class="fcard">
+          <div class="ftag"><span class="bracket">[</span>system<span class="bracket">]</span></div>
+          <h3>The operating system</h3>
+          <p>Governance rules, workflows, conventions, and a frontmatter schema that keeps every file legible to both you and Claude.</p>
+        </div>
+        <div class="fcard">
+          <div class="ftag"><span class="bracket">[</span>templates<span class="bracket">]</span></div>
+          <h3>Templates for every file type</h3>
+          <p>Profile, claims, analyses, decisions, research, and logs — each with the structure baked in so you never start from a blank page.</p>
+        </div>
+        <div class="fcard">
+          <div class="ftag"><span class="bracket">[</span>example<span class="bracket">]</span></div>
+          <h3>A worked example domain</h3>
+          <p>"Home Coffee Setup," fully filled in — showing the shape a real domain takes from first claim to committed decision.</p>
+        </div>
+        <div class="fcard">
+          <div class="ftag"><span class="bracket">[</span>onboarding<span class="bracket">]</span></div>
+          <h3>A 30-minute onboarding</h3>
+          <p>BOOTSTRAP.md that Claude walks you through, step by step, until your own vault is live and answering questions.</p>
+        </div>
+      </div>
+      <p class="features-foot reveal">You bring the content. <span class="dim">The system files run the show.</span></p>
+    </div>
+  </section>
+
+  <!-- ============ INSTALL ============ -->
+  <section class="section-pad bordered" id="install">
+    <div class="wrap">
+      <div class="reveal" style="max-width:70ch;margin-bottom:40px;">
+        <p class="label">// 04 <span class="dim">— install · ~10 minutes</span></p>
+        <h2>From template to live vault</h2>
+        <p class="lede">Six steps. Most of them are one command.</p>
+      </div>
+      <div class="install-grid reveal">
+        <div class="terminal">
+          <div class="term-bar">
+            <span class="tl r"></span><span class="tl y"></span><span class="tl g"></span>
+            <span class="term-title">~/my-brain — setup</span>
+          </div>
+          <div class="term-body">
+            <div class="step">
+              <div class="step-head"><span class="n">1</span><span class="desc">Use this template <span class="kbd">▸</span> create your repo, then clone it:</span></div>
+              <div class="cmd"><span class="cmd-row"><span class="prompt">$</span>git clone https://github.com/&lt;you&gt;/my-brain.git ~/my-brain</span></div>
+            </div>
+            <div class="step">
+              <div class="step-head"><span class="n">2</span><span class="desc">Install Obsidian, Claude Code, and the Obsidian CLI.</span></div>
+            </div>
+            <div class="step">
+              <div class="step-head"><span class="n">3</span><span class="desc">Obsidian → Open folder as vault → pick <span class="kbd">~/my-brain</span></span></div>
+            </div>
+            <div class="step">
+              <div class="step-head"><span class="n">4</span><span class="desc">Start Claude inside the vault:</span></div>
+              <div class="cmd"><span class="cmd-row"><span class="prompt">$</span>cd ~/my-brain &amp;&amp; claude</span></div>
+            </div>
+            <div class="step">
+              <div class="step-head"><span class="n">5</span><span class="desc">Add the Obsidian skills:</span></div>
+              <div class="cmd"><span class="cmd-row"><span class="prompt">›</span><span class="slash">/plugin</span> marketplace add kepano/obsidian-skills</span><span class="cmd-row"><span class="prompt">›</span><span class="slash">/plugin</span> install obsidian@obsidian-skills</span></div>
+            </div>
+            <div class="step">
+              <div class="step-head"><span class="n">6</span><span class="desc">Tell Claude:</span></div>
+              <div class="cmd"><span class="cmd-row"><span class="prompt">›</span><span class="said">"Walk me through BOOTSTRAP.md."</span></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="ico">!</span>
+          <div class="ctxt">
+            <span class="lead">// privacy default</span>
+            Assume this vault could become public. Only record what you'd be fine seeing attached to your name in public. When in doubt, generalize.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="wrap">
+      <div class="footer-cta reveal">
+        <h2>Start your vault</h2>
+        <p class="sub">Generate your own repo from the template and let Claude walk you through the rest.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="https://github.com/christian93kg/second-brain/generate" target="_blank" rel="noopener">Use this template <span class="arr">→</span></a>
+          <a class="btn btn-ghost" href="https://github.com/christian93kg/second-brain" target="_blank" rel="noopener">View on GitHub</a>
+        </div>
+      </div>
+      <div class="credits">
+        <p class="creds-text">Pattern sketched by <span class="em">Andrej Karpathy</span> (LLM-maintained wiki). Obsidian skills by <span class="em">Steph Ango / kepano</span>. MIT licensed.</p>
+        <p><a href="https://github.com/christian93kg/second-brain" target="_blank" rel="noopener">github.com/christian93kg/second-brain →</a></p>
+      </div>
+    </div>
+  </footer>
+
+</main>
+
+<script>
+  // Reveal-on-scroll
+  (function () {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var items = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+    if (reduce || !('IntersectionObserver' in window)) {
+      items.forEach(function (el) { el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    items.forEach(function (el) { io.observe(el); });
+  })();
+
+  // Typewriter on the hero tagline (respects reduced motion)
+  (function () {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    var el = document.getElementById('typeline');
+    if (!el) return;
+    var full = el.textContent;
+    el.textContent = '';
+    el.style.minHeight = '1.5em';
+    var i = 0;
+    function tick() {
+      if (i <= full.length) {
+        el.textContent = full.slice(0, i);
+        i++;
+        setTimeout(tick, 16 + Math.random() * 22);
+      }
+    }
+    setTimeout(tick, 420);
+  })();
+</script>
+
+</body>
+</html>
