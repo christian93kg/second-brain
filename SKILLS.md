@@ -3,7 +3,7 @@ id: SKILLS
 type: system
 status: active
 created: 2026-05-28
-updated: 2026-05-28
+updated: 2026-06-11
 tags:
   - system
   - skills
@@ -59,6 +59,8 @@ Run `obsidian help` for the full reference once installed. See `BOOTSTRAP.md` fo
 - Always pass `silent` on `create`/`append` so notes don't steal focus in the editor
 - Pass `overwrite` to `create` to replace an existing file (use `path=` only, not `name=` — see `_lessons.md`)
 - Use `format=json` for structured output you need to parse
+- For non-trivial content (multi-line, backticks, `$`), build it with the `Write` tool in `/tmp/claude/<file>.md`, then `content=$(cat /tmp/claude/<file>.md); obsidian create overwrite path=... content="$content" silent` — and verify with `obsidian read` afterward
+- Large content (>~30 KB) can silently fail over argv. Chunk via `create overwrite` + `append`, or use `obsidian eval` with `app.vault.modify` + `require('fs')` — see `_lessons.md` for both patterns
 
 ---
 

@@ -3,7 +3,7 @@ id: index
 type: system
 status: active
 created: 2026-05-28
-updated: 2026-05-28
+updated: 2026-06-11
 tags:
   - system
   - index
@@ -25,7 +25,8 @@ Read this file when you need to find a page by name or topic. For navigating by 
 - [[conventions]] — claim format, canonical-home rule, naming, archive policy
 - [[_start_here]] — owner profile, plan, domain map, current priorities
 - [[_decisions]] — decision log with revisit triggers
-- [[_lessons]] — living ledger of corrections; inherited starter wisdom + your own additions
+- [[_lessons]] — living ledger of corrections, kept as a distilled digest; inherited starter wisdom + your own additions
+- [[_lessons_archive]] — full text of digested lessons, same headings; open when the digest isn't enough
 - [[quick_reference]] — single-value dashboard
 - [[GAPS]] — lint output: stale, orphans, contradictions, overdue reviews
 - [[log]] — append-only operations log

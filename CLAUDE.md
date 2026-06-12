@@ -1,5 +1,5 @@
 ---
-updated: 2026-05-28
+updated: 2026-06-11
 ---
 # Life Optimization Vault — Claude Instructions
 
@@ -15,7 +15,7 @@ At the beginning of every session, read these files in this exact order before a
 2. **`SKILLS.md`** — operating procedures (ingest, query, lint, decision-review, report, file-answer).
 3. **`_start_here.md`** — the owner's profile, current state, and domain map.
 4. **`GAPS.md`** — outstanding gaps, stale files, contradictions, and overdue decision reviews from the last lint pass.
-5. **`_lessons.md`** — living ledger of corrections from the owner. Same goal: same mistake never twice.
+5. **`_lessons.md`** — living ledger of corrections from the owner, kept as a distilled digest (full entries live in `_lessons_archive.md`; open it only when a digest entry isn't enough). Same goal: same mistake never twice.
 
 If any of those five files are missing, say so and stop. Do not guess structure or fall back to general knowledge.
 
@@ -189,7 +189,7 @@ Adapted from general Claude Code practice; applied to vault work, not software.
 - **Confirm mental model before multi-file sweeps.** Before editing 3+ files, restate (a) what the key figures in scope mean, (b) what file types exist in the folders you'll touch and their purpose, (c) which tools you'll use for writes. Wait for confirmation. Prevents silent-propagation errors where one wrong assumption cascades across many files.
 - **Re-plan when sideways.** If a walk uncovers something that invalidates the plan, stop and re-scope. Don't push through a stale plan.
 - **Subagents for exploration.** Use `Explore` / `general-purpose` agents for multi-file research, cross-domain scans, or "is X referenced anywhere" sweeps. Keeps the main context clean. One focused task per agent.
-- **Lessons file.** After any correction from the owner, append the pattern to `_lessons.md`. Review at session start alongside `GAPS.md`. Goal: same mistake never twice.
+- **Lessons file.** After any correction from the owner, append the full entry to `_lessons.md`; lint later condenses entries older than ~30 days into the digest and moves the full text to `_lessons_archive.md`. Review at session start alongside `GAPS.md`. Goal: same mistake never twice.
 - **Verify before "done".** A walk isn't complete until: inbound refs on surviving files are clean, `GAPS.md` is updated, `log.md` has the entry, and the ceiling (`_start_here.md` / domain overview) reflects the new state. "I edited the files" is not done.
 - **Root cause over patch.** If a claim contradicts an overview, find *why* — don't just edit one side to match. If a wikilink is broken, find whether the target was renamed, deleted, or never existed.
 - **Minimal impact.** Touch only what the task requires. A fix to one claim doesn't justify reformatting the file. A walk doesn't justify rewriting research.

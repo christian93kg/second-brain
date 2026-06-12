@@ -3,7 +3,7 @@ id: bootstrap
 type: system
 status: active
 created: 2026-05-28
-updated: 2026-05-28
+updated: 2026-06-11
 tags:
   - system
   - bootstrap
@@ -31,7 +31,8 @@ SKILLS.md           — workflow index (query, ingest, lint, etc.)
 conventions.md      — claim format, naming, archive policy
 _start_here.md      — YOUR profile, plan, priorities. Fill this in first.
 _decisions.md       — decision log, grows as you commit to things
-_lessons.md         — inherited starter lessons + a slot for your own
+_lessons.md         — inherited starter lessons (distilled digest) + a slot for your own
+_lessons_archive.md — full text of digested lessons; grows as lint condenses old entries
 index.md            — catalog of every page; updated by Claude on ingest
 log.md              — append-only ops log
 GAPS.md             — what's stale / orphaned / overdue; refreshed by `lint`
